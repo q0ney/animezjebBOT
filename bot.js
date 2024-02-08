@@ -9,21 +9,16 @@ const config = {
     username: 'botname',
     password: 'oauth',
   },
-  channels: ['#channel'],
+  channels: ['#channelname'],
 };
 
 const client = new tmi.client(config);
 
 client.connect();
 
-
-
-
-
 client.on('connected', (address, port) => {
   console.log(`Connected to ${address}:${port}`);
-  sendMessageWithDelay('#channel', 'siema polonczylem sie z czatem', 2000);
-  sendMessageWithDelay('#channel', 'som tu jakies alternatywki? SNIFFA', 2000);
+  sendMessageWithDelay('#channelname', 'siema polonczylem sie z czatem', 2000); // wiadomosc powitalna jak bot sie polaczy
 });
 
 client.on('message', (channel, userstate, message, self) => {
@@ -56,8 +51,10 @@ function processQueue() {
   }, delay);
 }
 
-const zbanowani = ['cekolak', 'itacherbiceps', 'shini_waifu'];
+const zbanowani = []; // zbanowani uzytkownicy ktorzy nie moga korzystac z bota
 zbanowani.sort();
+let raffleArray = [] // array z osobami ktore biora udzial w losowaniu
+let raffleOn = false
 
 const juzbylZjeb = []
 
@@ -87,13 +84,46 @@ function handleCommands(channel, username, message) {
 
         }
       }
-    
-      if (trimmedMessage === 'sigma') {
-        sendMessageWithDelay(channel, `@q0ney sigma @itacherbiceps ligma`, 1000);
+
+      const alreadyJoined = raffleArray.find(e => e === username) // sprawdzenie czy juz dolaczyl
+
+      //ROZPOCZECIE LOSOWANIA
+      if(!raffleOn){
+        if (trimmedMessage === "!sraffle"){
+          raffleOn = true
+          sendMessageWithDelay(channel, `Rozpoczento losowanie na talon wpsiz "!dajciemigo" aby dołączyć`, 1000);
+        }
       }
-    
-      if (trimmedMessage === '!cekolak') {
-        sendMessageWithDelay(channel, `@cekolak pierdolsie`, 1000);
+
+      //DOLACZANIE DO LOSOWANIA
+      if(raffleOn){
+        if(trimmedMessage === "!dajciemigo"){
+          if(alreadyJoined){
+            sendMessageWithDelay(channel, `@${username} jusz dolonczyles opanuj sie aok`, 1000);
+          }else {
+            sendMessageWithDelay(channel, `@${username} pomyslnie dolonczyles powodzenia`, 1000);
+            raffleArray.push(username)
+          }
+        }
+      }
+      //ZATRZYMANIE LOSOWANIA
+      if(raffleOn){
+        if(trimmedMessage === "!stopraffle"){
+            sendMessageWithDelay(channel, `Zatrzymano losowanie aok`, 1000);
+            raffleOn = false
+            raffleArray = []
+        }
+      }
+
+      //LOSOWANIE ZWYCIEZCY
+      if(raffleArray.length > 0 && raffleOn){
+        if(trimmedMessage === "!drawwinner"){
+          let winner = raffleArray[Math.round(Math.random()*(raffleArray.length-1))]
+          sendMessageWithDelay(channel, `Talon wygrał @${winner} brawo Clap`, 1000);
+          raffleOn = false
+          raffleArray = []
+
+        }
       }
     
     }
